@@ -1,6 +1,7 @@
 # P2P Calling App — Architecture & Approach
 
 ## Table of Contents
+
 1. [Overview](#overview)
 2. [Architecture Diagram](#architecture-diagram)
 3. [Call Flow — Step by Step](#call-flow--step-by-step)
@@ -149,6 +150,7 @@ User A <======== Media (audio/video) ========> User B
 **Step 4-5:** Alice tells the server she wants to call Bob. Server forwards to Bob.
 
 **Step 6-8:** Alice's WebRTC creates an **SDP Offer** (Session Description Protocol). This contains:
+
 - Supported codecs (Opus, VP8, etc.)
 - Media capabilities
 - ICE candidates (network addresses)
@@ -168,6 +170,7 @@ Server relays this to Bob.
 ### What is SDP?
 
 SDP (Session Description Protocol) is a text format describing:
+
 ```
 v=0
 o=- 12345 2 IN IP4 192.168.1.100
@@ -291,12 +294,12 @@ Alice ── audio ──▶ TURN Server ── audio ──▶ Bob
 
 ### When You Need TURN
 
-| Test | Result | Need TURN? |
-|------|--------|------------|
-| Same WiFi network | Works | No |
-| WiFi ↔ Mobile data | Maybe | Yes (usually) |
-| Different countries | Fails | Yes |
-| Corporate network ↔ Home | Fails | Yes |
+| Test                     | Result | Need TURN?    |
+| ------------------------ | ------ | ------------- |
+| Same WiFi network        | Works  | No            |
+| WiFi ↔ Mobile data       | Maybe  | Yes (usually) |
+| Different countries      | Fails  | Yes           |
+| Corporate network ↔ Home | Fails  | Yes           |
 
 **We include Google STUN servers free. TURN is optional but recommended for production.**
 
@@ -307,6 +310,7 @@ Alice ── audio ──▶ TURN Server ── audio ──▶ Bob
 ### Why We Need Signaling
 
 WebRTC peers need to exchange data **before** they can connect:
+
 - SDP offers/answers
 - ICE candidates
 - Call state (ringing, accepted, rejected, ended)
@@ -317,7 +321,7 @@ This "meta-communication" is signaling. We use **Socket.io** (WebSocket).
 
 ```js
 // Server-side (server/src/index.js)
-const io = new Server(server, { cors: { origin: '*' } });
+const io = new Server(server, { cors: { origin: "*" } });
 
 // Authenticate socket connections with JWT
 io.use((socket, next) => {
@@ -334,7 +338,7 @@ io.use((socket, next) => {
 ```js
 const userSockets = new Map();
 
-io.on('connection', (socket) => {
+io.on("connection", (socket) => {
   userSockets.set(socket.userId, socket.id);
   // Now we can find a user's socket by their user ID
 });
@@ -342,21 +346,21 @@ io.on('connection', (socket) => {
 
 ### All Socket Events
 
-| Event | Sender | Receiver | Data | Purpose |
-|-------|--------|----------|------|---------|
-| `call-user` | Caller | Server | `{ targetUserId, callType, sdp }` | Start a call |
-| `incoming-call` | Server | Target | `{ callerId, callerUsername, callType, sdp }` | Ring the target |
-| `answer-call` | Target | Server | `{ callerId, sdp }` | Accept the call |
-| `call-answered` | Server | Caller | `{ sdp, answererId }` | Tell caller it's connected |
-| `reject-call` | Target | Server | `{ callerId }` | Decline the call |
-| `call-rejected` | Server | Caller | `{ rejectedBy }` | Tell caller it was declined |
-| `cancel-call` | Caller | Server | `{ targetUserId }` | Cancel before answer |
-| `call-cancelled` | Server | Target | `{ cancelledBy }` | Tell target call was cancelled |
-| `ice-candidate` | Either | Server | `{ targetUserId, candidate }` | Exchange ICE candidates |
-| `end-call` | Either | Server | `{ targetUserId }` | End an active call |
-| `call-ended` | Server | Other | `{ endedBy }` | Notify call ended |
-| `user-status` | Server | All | `{ userId, status }` | Broadcast online/offline |
-| `disconnect` | Client | Server | — | Clean up on disconnect |
+| Event            | Sender | Receiver | Data                                          | Purpose                        |
+| ---------------- | ------ | -------- | --------------------------------------------- | ------------------------------ |
+| `call-user`      | Caller | Server   | `{ targetUserId, callType, sdp }`             | Start a call                   |
+| `incoming-call`  | Server | Target   | `{ callerId, callerUsername, callType, sdp }` | Ring the target                |
+| `answer-call`    | Target | Server   | `{ callerId, sdp }`                           | Accept the call                |
+| `call-answered`  | Server | Caller   | `{ sdp, answererId }`                         | Tell caller it's connected     |
+| `reject-call`    | Target | Server   | `{ callerId }`                                | Decline the call               |
+| `call-rejected`  | Server | Caller   | `{ rejectedBy }`                              | Tell caller it was declined    |
+| `cancel-call`    | Caller | Server   | `{ targetUserId }`                            | Cancel before answer           |
+| `call-cancelled` | Server | Target   | `{ cancelledBy }`                             | Tell target call was cancelled |
+| `ice-candidate`  | Either | Server   | `{ targetUserId, candidate }`                 | Exchange ICE candidates        |
+| `end-call`       | Either | Server   | `{ targetUserId }`                            | End an active call             |
+| `call-ended`     | Server | Other    | `{ endedBy }`                                 | Notify call ended              |
+| `user-status`    | Server | All      | `{ userId, status }`                          | Broadcast online/offline       |
+| `disconnect`     | Client | Server   | —                                             | Clean up on disconnect         |
 
 ---
 
@@ -441,35 +445,35 @@ users 1───N messages (receiver_id → users.id)
 
 ### Authentication
 
-| Method | Path | Auth | Body | Response |
-|--------|------|------|------|----------|
-| POST | `/api/auth/register` | No | `{ username, email, password, displayName?, phoneNumber? }` | `{ token, user }` |
-| POST | `/api/auth/login` | No | `{ username, password }` | `{ token, user }` |
-| GET | `/api/auth/profile` | Yes | — | `{ id, username, email, displayName, ... }` |
-| PUT | `/api/auth/profile` | Yes | `{ displayName?, phoneNumber?, avatarUrl? }` | `{ user }` |
-| PUT | `/api/auth/password` | Yes | `{ currentPassword, newPassword }` | `{ message }` |
+| Method | Path                 | Auth | Body                                                        | Response                                    |
+| ------ | -------------------- | ---- | ----------------------------------------------------------- | ------------------------------------------- |
+| POST   | `/api/auth/register` | No   | `{ username, email, password, displayName?, phoneNumber? }` | `{ token, user }`                           |
+| POST   | `/api/auth/login`    | No   | `{ username, password }`                                    | `{ token, user }`                           |
+| GET    | `/api/auth/profile`  | Yes  | —                                                           | `{ id, username, email, displayName, ... }` |
+| PUT    | `/api/auth/profile`  | Yes  | `{ displayName?, phoneNumber?, avatarUrl? }`                | `{ user }`                                  |
+| PUT    | `/api/auth/password` | Yes  | `{ currentPassword, newPassword }`                          | `{ message }`                               |
 
 ### Contacts
 
-| Method | Path | Auth | Query/Body | Response |
-|--------|------|------|------------|----------|
-| GET | `/api/contacts` | Yes | — | `[{ id, username, displayName, status, ... }]` |
-| GET | `/api/contacts/search?query=` | Yes | `?query=alice` | `[{ id, username, displayName, ... }]` |
-| POST | `/api/contacts` | Yes | `{ contactId }` | `{ message }` |
-| DELETE | `/api/contacts/:contactId` | Yes | — | `{ message }` |
+| Method | Path                          | Auth | Query/Body      | Response                                       |
+| ------ | ----------------------------- | ---- | --------------- | ---------------------------------------------- |
+| GET    | `/api/contacts`               | Yes  | —               | `[{ id, username, displayName, status, ... }]` |
+| GET    | `/api/contacts/search?query=` | Yes  | `?query=alice`  | `[{ id, username, displayName, ... }]`         |
+| POST   | `/api/contacts`               | Yes  | `{ contactId }` | `{ message }`                                  |
+| DELETE | `/api/contacts/:contactId`    | Yes  | —               | `{ message }`                                  |
 
 ### Calls
 
-| Method | Path | Auth | Body | Response |
-|--------|------|------|------|----------|
-| GET | `/api/calls` | Yes | — | `[{ id, otherUserId, callType, status, duration, ... }]` |
-| POST | `/api/calls` | Yes | `{ receiverId, callType, status, duration }` | `{ callId }` |
+| Method | Path         | Auth | Body                                         | Response                                                 |
+| ------ | ------------ | ---- | -------------------------------------------- | -------------------------------------------------------- |
+| GET    | `/api/calls` | Yes  | —                                            | `[{ id, otherUserId, callType, status, duration, ... }]` |
+| POST   | `/api/calls` | Yes  | `{ receiverId, callType, status, duration }` | `{ callId }`                                             |
 
 ### TURN/STUN
 
-| Method | Path | Auth | Response |
-|--------|------|------|----------|
-| GET | `/api/turn` | No | `{ iceServers: [{ urls, username?, credential? }] }` |
+| Method | Path        | Auth | Response                                             |
+| ------ | ----------- | ---- | ---------------------------------------------------- |
+| GET    | `/api/turn` | No   | `{ iceServers: [{ urls, username?, credential? }] }` |
 
 ---
 
@@ -555,11 +559,11 @@ users 1───N messages (receiver_id → users.id)
 
 ### Authentication
 
-| Layer | Mechanism | Purpose |
-|-------|-----------|---------|
-| REST API | JWT Bearer token | Verify user identity |
+| Layer     | Mechanism             | Purpose                   |
+| --------- | --------------------- | ------------------------- |
+| REST API  | JWT Bearer token      | Verify user identity      |
 | Socket.io | JWT in handshake auth | Verify socket connections |
-| Passwords | bcrypt (12 rounds) | Hash storage |
+| Passwords | bcrypt (12 rounds)    | Hash storage              |
 
 ### JWT Flow
 
@@ -574,18 +578,18 @@ users 1───N messages (receiver_id → users.id)
 
 ### Media Security
 
-| Feature | Implementation |
-|---------|---------------|
-| Encryption | WebRTC uses DTLS-SRTP (mandatory) — all media encrypted |
-| No media on server | P2P only — server never sees audio/video |
-| TURN relay encryption | DTLS/TLS through TURN |
+| Feature               | Implementation                                          |
+| --------------------- | ------------------------------------------------------- |
+| Encryption            | WebRTC uses DTLS-SRTP (mandatory) — all media encrypted |
+| No media on server    | P2P only — server never sees audio/video                |
+| TURN relay encryption | DTLS/TLS through TURN                                   |
 
 ### Data at Rest
 
-| Data | Protection |
-|------|-----------|
-| Passwords | bcrypt hash |
-| JWT tokens | Signed with secret |
+| Data          | Protection              |
+| ------------- | ----------------------- |
+| Passwords     | bcrypt hash             |
+| JWT tokens    | Signed with secret      |
 | Personal data | MySQL access controlled |
 
 ### What We DON'T Do (Yet)
@@ -692,16 +696,16 @@ Root (App.js)
 
 ### Screen Responsibilities
 
-| Screen | Purpose | Key Features |
-|--------|---------|-------------|
-| Login | Authenticate existing user | Username/email + password |
-| Register | Create new account | Validation, password confirmation |
-| Home | Main contacts list | Online status, voice/video buttons |
-| CallHistory | Past calls | Incoming/outgoing/missed, duration |
-| Settings | App configuration | Profile edit, password, toggles |
-| SearchUsers | Find people | Real-time search, add contacts |
-| UserProfile | User details | Call again, add/remove contact |
-| Calling | Active call | Mute, speaker, video toggle, timer |
+| Screen      | Purpose                    | Key Features                       |
+| ----------- | -------------------------- | ---------------------------------- |
+| Login       | Authenticate existing user | Username/email + password          |
+| Register    | Create new account         | Validation, password confirmation  |
+| Home        | Main contacts list         | Online status, voice/video buttons |
+| CallHistory | Past calls                 | Incoming/outgoing/missed, duration |
+| Settings    | App configuration          | Profile edit, password, toggles    |
+| SearchUsers | Find people                | Real-time search, add contacts     |
+| UserProfile | User details               | Call again, add/remove contact     |
+| Calling     | Active call                | Mute, speaker, video toggle, timer |
 
 ---
 
@@ -775,16 +779,16 @@ app: Expo dev server
 
 ### Production Checklist
 
-| Component | Change Needed |
-|-----------|--------------|
-| Server | Deploy to VPS, use HTTPS, set `NODE_ENV=production` |
-| WebSocket | Use `wss://` instead of `ws://` |
-| TURN | Set external IP in Coturn config |
-| MySQL | Use managed database or secure VPS instance |
-| JWT Secret | Use strong random string (32+ chars) |
-| CORS | Restrict to specific origins |
-| Rate Limiting | Add express-rate-limit |
-| TURN Credentials | Use time-limited tokens or per-user auth |
+| Component        | Change Needed                                       |
+| ---------------- | --------------------------------------------------- |
+| Server           | Deploy to VPS, use HTTPS, set `NODE_ENV=production` |
+| WebSocket        | Use `wss://` instead of `ws://`                     |
+| TURN             | Set external IP in Coturn config                    |
+| MySQL            | Use managed database or secure VPS instance         |
+| JWT Secret       | Use strong random string (32+ chars)                |
+| CORS             | Restrict to specific origins                        |
+| Rate Limiting    | Add express-rate-limit                              |
+| TURN Credentials | Use time-limited tokens or per-user auth            |
 
 ### Coturn Production Config
 
@@ -905,3 +909,19 @@ Alice ── audio ──▶ TURN Server ── audio ──▶ Bob
     → Log call to /api/calls
     → Return to previous screen
 ```
+
+**I did NOT put RTCPeerConnection in the backend.** Here's what's actually where:
+
+| Component               | Location          | Purpose                             |
+| ----------------------- | ----------------- | ----------------------------------- |
+| **RTCPeerConnection**   | ✅ Frontend only  | Creates actual media connection     |
+| **getUserMedia()**      | ✅ Frontend only  | Accesses camera/mic                 |
+| **TURN server config**  | ✅ Backend `.env` | Credentials only                    |
+| **GET /api/turn**       | ✅ Backend route  | Returns ICE server URLs to frontend |
+| **Socket.io signaling** | ✅ Backend        | Relays SDP & ICE between peers      |
+| **WebRTC service**      | ✅ Frontend only  | Manages the peer connection         |
+
+**Backend stores:** TURN credentials + signaling logic
+**Frontend creates:** RTCPeerConnection using credentials from backend
+
+Nothing WebRTC-related runs on the server. The server only hands out config and passes messages between clients.
