@@ -1,0 +1,20 @@
+{
+  "expo": {
+    "name": "P2P Calling",
+    "slug": "p2p-calling",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": false,
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#6366F1"
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "scheme": "p2pcalling"
+  }
+}
